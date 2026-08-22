@@ -88,6 +88,9 @@ function setCaption(text) {
 function updateCaptionHistory(token) {
   const label = String(token || '').trim();
   if (!label || !shouldAppendCaptionLabel(label)) {
+    // Unknown/empty prediction — clear the pending label so the banner disappears.
+    pendingCaptionLabel = null;
+    pendingCaptionFrames = 0;
     return;
   }
 
@@ -254,8 +257,10 @@ function drawLandmarks(handSet, handednesses) {
     }
     ctx.fill();
 
-    // Draw floating semitransparent banner if we have a prediction, ONLY for the primary hand
-    const currentLabel = lastEmittedLabel || pendingCaptionLabel;
+    // Only show banner when there is a live stable prediction — not a stale one.
+    // pendingCaptionLabel resets to null when the matcher returns 'unknown',
+    // so this correctly clears the banner when the hand goes unrecognized.
+    const currentLabel = pendingCaptionLabel;
     
     if (isPrimary) {
       // Calculate wrist angle visually (roll)
@@ -291,7 +296,7 @@ function drawLandmarks(handSet, handednesses) {
         const bannerH = 20;
 
         const bx = (centerX * width) - (bannerW / 2);
-        const by = (minY * height) - bannerH - 8; // Float slightly above highest dot
+        const by = (minY * height) - bannerH - 28; // Float well above the highest landmark
 
         ctx.fillStyle = 'rgba(18, 19, 21, 0.85)'; 
         ctx.beginPath();
