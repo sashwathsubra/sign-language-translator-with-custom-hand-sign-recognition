@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+.pytest_cache
+pytestdebug.log
+.coverage
+.python-version
+
+# Other
+.DS_Store
+.vscode
+.idea
+temp/
+temp*
+
+# build
+dist/
+htmlcov
+.coverage.*
+docs/_build
+docs/make*
+docs/modules.rst
+docs/sign_language_translator.*.rst
+./*.rst
+./make*
+
+# auto-downloaded
+sign-language-resources
+assets/
+*[_-]urls.json
+*checksum.json
+
+# Environment and Dependencies
+.venv/
+.env
+node_modules/
+
+# Local Data
+.demo_gestures.json
+*.sqlite
+*.sqlite3

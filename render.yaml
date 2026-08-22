@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: slt-demo-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && pip install fastapi uvicorn websockets
+    startCommand: python server.py
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend-domain.example
+      - key: MAX_BUFFER_SIZE
+        value: 16
+      - key: IDLE_TIMEOUT_SECONDS
+        value: 60
+      - key: MAX_CONCURRENT_SESSIONS
+        value: 32

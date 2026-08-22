@@ -1,0 +1,117 @@
+# This workflow will test, build & upload a Python Package to test.PyPI.org using Pytest, Poetry & Twine
+
+name: Check Python Package Releasability
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  check_releasable:
+    runs-on: ubuntu-latest
+
+    outputs:
+      package_version: ${{ steps.version.outputs.PACKAGE_VERSION }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.6.1
+          virtualenvs-create: false
+          virtualenvs-in-project: false
+
+      - name: Create & Activate a virtual environment
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies and the Package
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install "twine==5.1.1" "pytest==7.4.0" "importlib-metadata<8.0.0"
+          poetry install --all-extras
+
+      - name: Run tests
+        run: |
+          poetry run pytest -vv
+
+      - name: Append Build Number to version
+        id: version
+        run: |
+          PACKAGE_VERSION="$(poetry version -s).$(date +%Y%m%d%H%M%S)"
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+          poetry version $PACKAGE_VERSION
+
+      - name: Build
+        run: |
+          poetry build
+
+      - name: Publish to test.pypi.org
+        if: success()
+        run: |
+          python3 -m twine upload --repository testpypi --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }} dist/*
+
+  install_released_package:
+    needs: check_releasable
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Create & Activate a virtual environment
+        run: |
+          python3 -m venv venv2
+          source venv2/bin/activate
+          python --version
+
+      - name: Install published package
+        continue-on-error: true
+        run: |
+          pip install --upgrade pip
+          sleep 10
+          pip3 install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "sign-language-translator==${{ needs.check_releasable.outputs.package_version }}"
+          pip3 show sign-language-translator
+
+      - name: Retry Install published package after Delay
+        if: always()
+        run: |
+          if ! pip3 show sign-language-translator &> /dev/null; then
+            echo "Retrying installation in 100 seconds..."
+            sleep 100
+            pip3 install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "sign-language-translator==${{ needs.check_releasable.outputs.package_version }}"
+            pip3 show sign-language-translator
+          fi
+
+      - name: Run Package CLI
+        if: success()
+        run: |
+          slt complete "<" --model-code urdu-mixed-ngram -w 1.0 --model-code ur-supported-gpt -w 1.5 --join ""
+
+      - name: Run Package Python API
+        if: success()
+        run: |
+          python3 -c "import sign_language_translator as slt; print(slt.__version__); model = slt.models.ConcatenativeSynthesis(text_language='urdu', sign_language='pk-sl', sign_format='video'); sign = model.translate('یہ بہت اچھا ہے۔'); print(len(sign));"
+
+        # BUG: OpenCV not writing videos on github actions: global cap_ffmpeg_impl.hpp:3018 open Could not find encoder for codec_id=27, error: Encoder not found
+        # slt translate "SLT" --model-code rule-based --text-lang ur --sign-lang pk-sl --sign-format video --display false --save-format avi
+        # ls -al | grep '.*\.avi$'
