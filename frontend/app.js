@@ -142,8 +142,11 @@ function renderTemplateList(gestures) {
     remove.addEventListener('click', async () => {
       try {
         const response = await fetch(`${backendUrl}/api/gestures/${encodeURIComponent(gesture.label)}`, { method: 'DELETE' });
+        let localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
+        delete localGestures[gesture.label];
+        localStorage.setItem('slt_gestures', JSON.stringify(localGestures));
         if (response.ok) {
-          await fetchTemplates();
+          fetchTemplates();
         }
       } catch (error) {
         console.error(error);
@@ -157,14 +160,31 @@ function renderTemplateList(gestures) {
 
 async function fetchTemplates() {
   try {
-    const response = await fetch(`${backendUrl}/api/gestures`);
-    if (!response.ok) return;
-    const payload = await response.json();
-    const gestures = payload.gestures || [];
+    const localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
+    const gestures = Object.keys(localGestures).map(label => ({
+      label,
+      count: 1,
+      needs_rerecord: false
+    }));
     renderTemplateList(gestures);
     maybeShowStarterGuide(gestures);
   } catch (error) {
     console.error(error);
+  }
+}
+
+async function syncLocalGesturesToBackend() {
+  try {
+    const localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
+    for (const [label, samples] of Object.entries(localGestures)) {
+      await fetch(`${backendUrl}/api/gestures/record`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, samples }),
+      });
+    }
+  } catch (error) {
+    console.error('Failed to sync local gestures to backend:', error);
   }
 }
 
@@ -664,6 +684,11 @@ async function recordGesture(labelOverride = '') {
   gestureSamples = [];
   updateStatus('Recording…', `Hold ${label} for 2–3 seconds.`);
   trainingTimer = window.setTimeout(async () => {
+    isRecordingGesture = false; // Stop recording samples
+    if (gestureSamples.length === 0) {
+      updateStatus('Error', 'No frames captured. Is the hand visible?');
+      return false;
+    }
     const payload = { label, samples: gestureSamples.slice(-20) };
     try {
       const response = await fetch(`${backendUrl}/api/gestures/record`, {
@@ -675,12 +700,16 @@ async function recordGesture(labelOverride = '') {
       if (!response.ok) {
         throw new Error(body.detail || 'Recording failed');
       }
-      isRecordingGesture = false;
+      
+      // Save locally
+      let localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
+      localGestures[label] = payload.samples;
+      localStorage.setItem('slt_gestures', JSON.stringify(localGestures));
+      
       updateStatus('Saved', `${label} was added to the trained vocabulary.`);
-      await fetchTemplates();
+      fetchTemplates();
       return true;
     } catch (error) {
-      isRecordingGesture = false;
       updateStatus('Error', error.message || 'Unable to save the gesture.');
       console.error(error);
       return false;
@@ -732,6 +761,7 @@ function bindEvents() {
 }
 
 window.addEventListener('load', async () => {
+  await syncLocalGesturesToBackend();
   await fetchTemplates();
 });
 
