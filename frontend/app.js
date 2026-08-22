@@ -1,4 +1,7 @@
-import { shouldAppendCaptionLabel, shouldSendLandmarks } from './demo_logic.js';
+import { shouldAppendCaptionLabel } from './demo_logic.js';
+import { GestureMatcher } from './matcher.js';
+
+const matcher = new GestureMatcher();
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('overlayCanvas');
@@ -16,10 +19,7 @@ const starterButton = document.getElementById('starterVocabulary');
 const trainedList = document.getElementById('trainedList');
 const refreshTemplatesButton = document.getElementById('refreshTemplates');
 
-let socket = null;
 let mediaStream = null;
-let reconnectTimer = null;
-let reconnectAttempt = 0;
 let animationFrameId = null;
 let isRunning = false;
 let lastVideoTime = -1;
@@ -32,9 +32,6 @@ let handLandmarker = null;
 let isRecordingGesture = false;
 let gestureSamples = [];
 let trainingTimer = null;
-let lastLandmarkSendAt = 0;
-let sendCounter = 0;
-let sendWindowStart = performance.now();
 let canvasContext = null;
 let canvasWidth = 0;
 let canvasHeight = 0;
@@ -44,10 +41,8 @@ let lastHandResult = null;
 const MEDIA_PIPE_VERSION = '0.10.14';
 const MEDIA_PIPE_CDN_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIA_PIPE_VERSION}`;
 const backendUrl = (window.__BACKEND_URL__ || window.location.origin).replace(/\/$/, '');
-const wsUrl = backendUrl.replace(/^http/, 'ws') + '/ws';
 const MAX_CAPTION_HISTORY = 20;
 const CAPTION_STABILITY_FRAMES = 5;
-const LANDMARK_SEND_INTERVAL_MS = 80;
 const CAMERA_CONSTRAINTS_LOW_LATENCY = {
   video: {
     facingMode: 'user',
@@ -139,18 +134,9 @@ function renderTemplateList(gestures) {
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.textContent = 'Delete';
-    remove.addEventListener('click', async () => {
-      try {
-        const response = await fetch(`${backendUrl}/api/gestures/${encodeURIComponent(gesture.label)}`, { method: 'DELETE' });
-        let localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
-        delete localGestures[gesture.label];
-        localStorage.setItem('slt_gestures', JSON.stringify(localGestures));
-        if (response.ok) {
-          fetchTemplates();
-        }
-      } catch (error) {
-        console.error(error);
-      }
+    remove.addEventListener('click', () => {
+      matcher.deleteTemplate(gesture.label);
+      fetchTemplates();
     });
     item.appendChild(label);
     item.appendChild(remove);
@@ -173,63 +159,7 @@ async function fetchTemplates() {
   }
 }
 
-async function syncLocalGesturesToBackend() {
-  try {
-    const localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
-    for (const [label, samples] of Object.entries(localGestures)) {
-      await fetch(`${backendUrl}/api/gestures/record`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label, samples }),
-      });
-    }
-  } catch (error) {
-    console.error('Failed to sync local gestures to backend:', error);
-  }
-}
 
-function connectSocket() {
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
-  updateStatus('Connecting…', 'Opening the local gesture backend.');
-  socket = new WebSocket(wsUrl);
-  socket.addEventListener('open', () => {
-    reconnectAttempt = 0;
-    updateStatus('Connected', 'Streaming live landmark frames.');
-  });
-  socket.addEventListener('message', (event) => {
-    try {
-      const payload = JSON.parse(event.data);
-      if (payload.type === 'prediction') {
-        const predictionLabel = payload.token || 'unknown';
-        updateCaptionHistory(predictionLabel);
-        confidence.textContent = `Confidence: ${payload.confidence ?? '—'}`;
-        if (ENABLE_MATCH_DEBUG_LOG && Array.isArray(payload.top_candidates) && payload.top_candidates.length) {
-          console.debug('[match-debug]', {
-            token: payload.token,
-            reason: payload.match_reason,
-            margin: payload.confidence_margin,
-            confusablePair: payload.confusable_pair,
-            top2: payload.top_candidates,
-          });
-        }
-      } else if (payload.type === 'status') {
-        statusMessage.textContent = payload.message;
-      } else if (payload.type === 'error') {
-        updateStatus('Error', payload.message || 'The backend is unavailable.');
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  });
-  socket.addEventListener('close', () => {
-    if (isRunning) {
-      reconnectAttempt += 1;
-      const delay = Math.min(10000, 1000 * 2 ** reconnectAttempt);
-      updateStatus('Reconnecting…', `Connection dropped. Retrying in ${Math.round(delay / 1000)}s.`);
-      reconnectTimer = window.setTimeout(connectSocket, delay);
-    }
-  });
-}
 
 function drawLandmarks(handSet, handednesses) {
   if (!canvasContext) {
@@ -498,18 +428,11 @@ function detectHandFrame() {
 
   const hands = result?.landmarks || [];
   const handednesses = result?.handednesses || result?.handedness || [];
-  const socketReady = !!(socket && socket.readyState === WebSocket.OPEN);
 
   if (!hands.length) {
     drawLandmarks([], []);
     confidence.textContent = 'Confidence: —';
     updateStatus('Idle', 'No hand detected. Show your hand in frame to begin.');
-    if (shouldSendLandmarks({ socketReady, now, lastLandmarkSendAt, intervalMs: LANDMARK_SEND_INTERVAL_MS })) {
-      lastLandmarkSendAt = now;
-      socket.send(JSON.stringify({ hand_detected: false }));
-      sendCounter += 1;
-      debugSendRate(now);
-    }
     return;
   }
 
@@ -517,7 +440,6 @@ function detectHandFrame() {
   updateStatus('Connected', 'Tracking hand.');
 
   let normalizedClassifierHand = [];
-  let frameContext = {};
 
   if (hands.length >= 2) {
     let primaryIdx = 0;
@@ -526,28 +448,27 @@ function detectHandFrame() {
     } else if (handednesses[0] && handednesses[0][0] && handednesses[0][0].categoryName === 'Right') {
        primaryIdx = 0;
     }
-    // Only pass the primary hand to avoid confusing the pattern recognizer with 42 points
     const classifierHand = hands[primaryIdx];
     normalizedClassifierHand = classifierHand.map((point) => [point.x, point.y, point.z]);
-    frameContext = buildFrameContext(classifierHand);
   } else {
     const classifierHand = pickClassifierHand(result);
     if (!classifierHand) return;
     normalizedClassifierHand = classifierHand.map((point) => [point.x, point.y, point.z]);
-    frameContext = buildFrameContext(classifierHand);
   }
 
-  if (shouldSendLandmarks({ socketReady, now, lastLandmarkSendAt, intervalMs: LANDMARK_SEND_INTERVAL_MS })) {
-    lastLandmarkSendAt = now;
-    socket.send(JSON.stringify({
-      hand_detected: true,
-      landmarks: normalizedClassifierHand,
-      tracked_hands: hands.length,
-      frame_context: frameContext,
-    }));
-    sendCounter += 1;
-    debugSendRate(now);
+  // ── Client-side classification (no WebSocket round-trip) ──────────────────
+  if (normalizedClassifierHand.length >= 21) {
+    const prediction = matcher.predict(normalizedClassifierHand);
+    updateCaptionHistory(prediction.token);
+    const confPct = prediction.token !== 'unknown'
+      ? `Confidence: ${Math.round(prediction.confidence * 100)}%`
+      : 'Confidence: —';
+    confidence.textContent = confPct;
+    if (ENABLE_MATCH_DEBUG_LOG && prediction.top_candidates?.length) {
+      console.debug('[match-debug]', prediction);
+    }
   }
+
   if (isRecordingGesture) {
     gestureSamples.push(normalizedClassifierHand);
   }
@@ -599,7 +520,6 @@ async function startCamera() {
   }
 
   try {
-    connectSocket();
     const tick = () => {
       if (!isRunning) return;
       detectHandFrame();
@@ -614,7 +534,7 @@ async function startCamera() {
     } else {
       animationFrameId = window.requestAnimationFrame(tick);
     }
-    updateStatus('Connected', 'MediaPipe hand tracking is active.');
+    updateStatus('Connected', 'Gesture recognition is fully client-side.');
     setCaption('Waiting for a hand…');
   } catch (error) {
     isRunning = false;
@@ -643,15 +563,7 @@ function stopCamera() {
     window.clearTimeout(trainingTimer);
     trainingTimer = null;
   }
-  if (reconnectTimer) {
-    window.clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
   handLandmarker = null;
-  if (socket) {
-    socket.close();
-    socket = null;
-  }
   if (mediaStream) {
     mediaStream.getTracks().forEach((track) => track.stop());
     mediaStream = null;
@@ -683,36 +595,20 @@ async function recordGesture(labelOverride = '') {
   isRecordingGesture = true;
   gestureSamples = [];
   updateStatus('Recording…', `Hold ${label} for 2–3 seconds.`);
-  trainingTimer = window.setTimeout(async () => {
-    isRecordingGesture = false; // Stop recording samples
+  trainingTimer = window.setTimeout(() => {
+    isRecordingGesture = false;
     if (gestureSamples.length === 0) {
       updateStatus('Error', 'No frames captured. Is the hand visible?');
-      return false;
+      return;
     }
-    const payload = { label, samples: gestureSamples.slice(-20) };
+    const samples = gestureSamples.slice(-20);
     try {
-      const response = await fetch(`${backendUrl}/api/gestures/record`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.detail || 'Recording failed');
-      }
-      
-      // Save locally
-      let localGestures = JSON.parse(localStorage.getItem('slt_gestures') || '{}');
-      localGestures[label] = payload.samples;
-      localStorage.setItem('slt_gestures', JSON.stringify(localGestures));
-      
+      matcher.recordTemplate(label, samples); // saves to localStorage internally
       updateStatus('Saved', `${label} was added to the trained vocabulary.`);
       fetchTemplates();
-      return true;
     } catch (error) {
       updateStatus('Error', error.message || 'Unable to save the gesture.');
       console.error(error);
-      return false;
     }
   }, 2500);
   return true;
@@ -760,9 +656,8 @@ function bindEvents() {
   window.addEventListener('beforeunload', stopCamera);
 }
 
-window.addEventListener('load', async () => {
-  await syncLocalGesturesToBackend();
-  await fetchTemplates();
+window.addEventListener('load', () => {
+  fetchTemplates();
 });
 
 bindEvents();
