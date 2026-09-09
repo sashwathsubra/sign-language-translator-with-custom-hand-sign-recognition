@@ -1,0 +1,5 @@
+# Sign Language Translator
+
+This file mirrors the machine-readable project summary in `llms.txt` for crawlers that request the capitalized filename.
+
+See `llms.txt` for the canonical project summary.

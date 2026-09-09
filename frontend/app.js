@@ -56,7 +56,7 @@ const CAMERA_CONSTRAINTS_FALLBACK = {
   video: true,
   audio: false,
 };
-const ENABLE_MATCH_DEBUG_LOG = true;
+const ENABLE_MATCH_DEBUG_LOG = false;
 const HAND_CONNECTIONS = [
   [0, 1], [1, 2], [2, 3], [3, 4],
   [0, 5], [5, 6], [6, 7], [7, 8],

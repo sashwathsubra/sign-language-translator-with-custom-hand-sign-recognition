@@ -11,7 +11,7 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: ALLOWED_ORIGINS
-        value: https://your-frontend-domain.example
+        value: https://sashwathsubra.github.io
       - key: MAX_BUFFER_SIZE
         value: 16
       - key: IDLE_TIMEOUT_SECONDS

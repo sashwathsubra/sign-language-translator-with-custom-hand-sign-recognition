@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/sitemap.xml

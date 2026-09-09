@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Sign Language Translator</title>
+  <desc id="desc">Live browser demo for translating hand gestures into captions.</desc>
+  <rect width="1200" height="630" fill="#f3f3ef"/>
+  <path d="M0 0h1200v82H0z" fill="#0e7a53"/>
+  <path d="M80 165h300" stroke="#0e7a53" stroke-width="8"/>
+  <text x="80" y="270" fill="#121315" font-family="Georgia, serif" font-size="70" font-weight="700">Sign Language</text>
+  <text x="80" y="350" fill="#121315" font-family="Georgia, serif" font-size="70" font-weight="700">Translator</text>
+  <text x="80" y="435" fill="#62666c" font-family="Arial, sans-serif" font-size="30">Live captions. Custom vocabulary. In your browser.</text>
+  <circle cx="1010" cy="330" r="145" fill="#121315"/>
+  <path d="M945 385V278a30 30 0 0 1 60 0v60-130a30 30 0 0 1 60 0v130-150a30 30 0 0 1 60 0v165l23-60a30 30 0 0 1 53 23l-38 113c-15 44-52 67-105 67h-30c-46 0-83-38-83-86Z" transform="translate(-73 -24) scale(.68)" fill="#f3f3ef"/>
+</svg>

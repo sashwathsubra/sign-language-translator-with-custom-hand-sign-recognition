@@ -1,0 +1,14 @@
+# Sign Language Translator
+
+> A browser-based demo that turns webcam hand landmarks into live captions and lets people train a personal gesture vocabulary.
+
+## Main page
+
+- [Live translator](https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/): Start the camera, view captions, and record custom gesture templates.
+- [Project source](https://github.com/sashwathsubra/sign-language-translator-with-custom-hand-sign-recognition): Open-source implementation and deployment notes.
+
+## Technical notes
+
+- The frontend uses MediaPipe Tasks Vision in the browser.
+- Gesture templates are stored locally in the browser for the demo.
+- The companion backend exposes a WebSocket demo service for server-side processing.

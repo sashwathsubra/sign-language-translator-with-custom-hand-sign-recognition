@@ -3,7 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SLT Live Demo</title>
+    <meta name="description" content="Live sign language translation in your browser with webcam landmarks, captions, and user-trained gesture vocabulary." />
+    <meta name="theme-color" content="#0e7a53" />
+    <link rel="canonical" href="https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sign Language Translator" />
+    <meta property="og:title" content="Sign Language Translator | Live Browser Demo" />
+    <meta property="og:description" content="Translate hand gestures into live captions and train a personal sign vocabulary in your browser." />
+    <meta property="og:url" content="https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/" />
+    <meta property="og:image" content="https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/social-share.svg" />
+    <meta property="og:image:alt" content="Sign Language Translator live demo with a hand landmark grid" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sign Language Translator | Live Browser Demo" />
+    <meta name="twitter:description" content="Translate hand gestures into live captions and train a personal sign vocabulary in your browser." />
+    <meta name="twitter:image" content="https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/social-share.svg" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="sitemap.xml" type="application/xml" />
+    <title>Sign Language Translator | Live Browser Demo</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "name": "Sign Language Translator",
+            "applicationCategory": "AccessibilityApplication",
+            "operatingSystem": "Web browser",
+            "description": "A browser-based sign language demo for live gesture captions and custom vocabulary training.",
+            "url": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/",
+            "image": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/social-share.svg",
+            "isAccessibleForFree": true,
+            "creator": { "@id": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/#organization" }
+          },
+          {
+            "@type": "LocalBusiness",
+            "@id": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/#organization",
+            "name": "Sign Language Translator Project",
+            "description": "Open-source accessibility software for experimenting with sign language translation.",
+            "url": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/",
+            "image": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/social-share.svg",
+            "areaServed": "Worldwide"
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/" },
+              { "@type": "ListItem", "position": 2, "name": "Live translator", "item": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/#translator" }
+            ]
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -54,6 +104,19 @@
         margin: 0;
         max-width: 70ch;
         color: var(--muted);
+      }
+      .breadcrumbs {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: var(--muted);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.75rem;
+      }
+      .breadcrumbs a,
+      .site-footer a {
+        color: var(--accent);
       }
       .layout {
         display: grid;
@@ -207,9 +270,38 @@
         background: var(--accent);
         margin: 0.35rem 0 0.2rem;
       }
+      .site-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+      .site-footer span:last-child {
+        display: flex;
+        gap: 1rem;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
       @media (max-width: 980px) {
         .layout {
           grid-template-columns: 1fr;
+        }
+        .site-footer {
+          align-items: flex-start;
+          flex-direction: column;
         }
       }
     </style>
@@ -223,7 +315,13 @@
         <p class="lead">Capture both hands in frame, track live landmarks, and map motions to your own recorded gesture templates with transparent confidence output.</p>
       </section>
 
-      <section class="layout">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="./">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Live translator</span>
+      </nav>
+
+      <section class="layout" id="translator">
         <section class="panel">
           <header class="panel-head">
             <h2 class="panel-title">Live Camera Feed</h2>
@@ -255,7 +353,8 @@
           <section class="panel block">
             <h2 class="panel-title">Teach a Sign</h2>
             <div class="field-row">
-              <input id="gestureLabel" type="text" maxlength="32" placeholder="gesture_label" />
+              <label class="sr-only" for="gestureLabel">Name for the gesture</label>
+              <input id="gestureLabel" type="text" maxlength="32" aria-label="Name for the gesture" />
               <button class="primary" id="recordGesture" type="button">Record</button>
             </div>
             <div class="actions">
@@ -271,6 +370,11 @@
           </section>
         </aside>
       </section>
+
+      <footer class="site-footer">
+        <span>Open-source browser demo for accessible sign communication.</span>
+        <span><a href="./README.md">Project details</a> <a href="./ATTRIBUTION.md">Attribution</a></span>
+      </footer>
     </main>
 
     <script src="config.js"></script>
