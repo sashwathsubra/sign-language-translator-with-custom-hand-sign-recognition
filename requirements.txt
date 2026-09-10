@@ -5,6 +5,9 @@ numpy==1.25.1
 torch==2.1.2
 click==8.1.6
 requests==2.31.0
+fastapi==0.115.6
+uvicorn==0.34.0
+websockets==14.2
 
 # optional
 mediapipe==0.10.11
