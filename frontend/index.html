@@ -20,6 +20,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="sitemap.xml" type="application/xml" />
     <title>Sign Language Translator | Live Browser Demo</title>
+    <meta name="author" content="Sashwath Subramanian" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -33,16 +34,17 @@
             "url": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/",
             "image": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/social-share.svg",
             "isAccessibleForFree": true,
+            "author": { "@id": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/#organization" },
             "creator": { "@id": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/#organization" }
           },
           {
-            "@type": "LocalBusiness",
+            "@type": "Organization",
             "@id": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/#organization",
-            "name": "Sign Language Translator Project",
-            "description": "Open-source accessibility software for experimenting with sign language translation.",
+            "name": "Sashwath Subramanian",
+            "description": "Creator of the Sign Language Translator open-source accessibility demo.",
             "url": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/",
             "image": "https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/social-share.svg",
-            "areaServed": "Worldwide"
+            "sameAs": "https://github.com/sashwathsubra"
           },
           {
             "@type": "BreadcrumbList",
@@ -56,6 +58,8 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
@@ -328,17 +332,17 @@
             <p class="status"><span id="connectionState">Connecting…</span></p>
           </header>
           <div class="stage">
-            <span id="statusMessage">Requesting webcam access</span>
+            <p id="statusMessage" role="status" aria-live="polite" class="overlay-note" style="margin:0 0 0.5rem">Requesting webcam access</p>
             <div class="video-wrap">
-              <video id="video" autoplay playsinline muted></video>
-              <canvas id="overlayCanvas"></canvas>
+              <video id="video" autoplay playsinline muted aria-label="Webcam feed for hand gesture detection"></video>
+              <canvas id="overlayCanvas" role="presentation" aria-hidden="true"></canvas>
             </div>
             <p class="overlay-note">Skeleton overlay draws locally at frame-rate; prediction transport remains throttled for stability.</p>
             <div class="actions">
-              <button class="primary" id="startHero" type="button">Launch</button>
-              <button class="primary" id="startDemo" type="button">Start Stream</button>
-              <button id="stopDemo" class="warn" type="button">Stop</button>
-              <button id="resetDemo" type="button">Reset</button>
+              <button class="primary" id="startHero" type="button" aria-label="Launch the live sign language translator">Launch</button>
+              <button class="primary" id="startDemo" type="button" aria-label="Start the webcam and gesture recognition stream">Start Stream</button>
+              <button id="stopDemo" class="warn" type="button" aria-label="Stop the webcam stream">Stop</button>
+              <button id="resetDemo" type="button" aria-label="Reset the session">Reset</button>
             </div>
           </div>
         </section>
@@ -366,14 +370,24 @@
 
           <section class="panel block">
             <h2 class="panel-title">Vocabulary</h2>
+            <div id="firstRunBanner" hidden style="background: #f0fdf4; border: 1px solid #16a34a; border-radius: 4px; padding: 0.75rem; margin-bottom: 0.75rem;">
+              <p style="margin: 0 0 0.5rem; font-size: 0.9rem; color: #166534;"><strong>First visit?</strong> Record 3 starter gestures (open hand, fist, thumbs up) to begin.</p>
+              <button id="startFirstRun" type="button" class="primary" style="padding: 0.4rem 0.6rem; font-size: 0.8rem;">Start Setup</button>
+            </div>
             <ul class="trained-list" id="trainedList"></ul>
           </section>
         </aside>
       </section>
 
       <footer class="site-footer">
-        <span>Open-source browser demo for accessible sign communication.</span>
-        <span><a href="./README.md">Project details</a> <a href="./ATTRIBUTION.md">Attribution</a></span>
+        <span>© 2026 <a href="https://github.com/sashwathsubra" rel="noopener noreferrer">Sashwath Subramanian</a>. Open-source accessibility demo.</span>
+        <span>
+          <a href="./README.md">Project details</a>
+          <a href="./ATTRIBUTION.md">Attribution</a>
+          <a href="./privacy-policy.html">Privacy</a>
+          <a href="./terms.html">Terms</a>
+          <a href="./cookie-policy.html">Cookies</a>
+        </span>
       </footer>
     </main>
 

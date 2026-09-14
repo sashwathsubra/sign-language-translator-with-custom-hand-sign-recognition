@@ -7,20 +7,57 @@
     <link rel="canonical" href="https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/404.html" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <title>Page Not Found | Sign Language Translator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
-      :root { color-scheme: light; font-family: Georgia, serif; color: #121315; background: #f3f3ef; }
+      :root {
+        --bg: #f3f3ef;
+        --ink: #121315;
+        --muted: #62666c;
+        --accent: #0e7a53;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.5;
+      }
       main { max-width: 42rem; margin: 18vh auto; padding: 2rem; }
-      h1 { font-size: clamp(2rem, 8vw, 4.5rem); margin: 0 0 1rem; }
-      p { color: #62666c; font: 1.1rem/1.6 Arial, sans-serif; }
-      a { color: #0e7a53; font: 700 1rem Arial, sans-serif; }
+      .kicker {
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        font-size: 0.76rem;
+        color: var(--accent);
+        margin: 0 0 0.75rem;
+      }
+      h1 {
+        font-size: clamp(2rem, 8vw, 4.5rem);
+        margin: 0 0 1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      p { color: var(--muted); font-size: 1.05rem; margin: 0 0 1.5rem; }
+      nav a {
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+      }
+      nav a:hover { text-decoration: underline; }
     </style>
   </head>
   <body>
     <main>
-      <p>Sign Language Translator</p>
+      <p class="kicker">Sign Language Translator</p>
       <h1>That page is not here.</h1>
       <p>The address may be outdated, but the live translator is ready when you are.</p>
-      <a href="./">Return to the live translator</a>
+      <nav aria-label="Return navigation">
+        <a href="./">Return to the live translator</a>
+      </nav>
     </main>
   </body>
 </html>

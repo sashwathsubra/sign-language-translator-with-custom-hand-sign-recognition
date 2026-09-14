@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Privacy Policy for the Sign Language Translator browser demo by Sashwath Subramanian." />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href="https://sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/privacy-policy.html" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <title>Privacy Policy | Sign Language Translator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f3f3ef;
+        --surface: #ffffff;
+        --ink: #121315;
+        --muted: #62666c;
+        --line: #d8d8d2;
+        --accent: #0e7a53;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.65;
+      }
+      main {
+        max-width: 72ch;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 5rem;
+      }
+      .draft-banner {
+        display: inline-block;
+        background: #fef3c7;
+        border: 1px solid #d97706;
+        color: #92400e;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+      }
+      .kicker {
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        font-size: 0.76rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin: 0 0 2rem;
+        font-family: 'IBM Plex Mono', monospace;
+      }
+      h2 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 2.5rem 0 0.5rem;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 0.35rem;
+      }
+      p, li { color: var(--ink); font-size: 0.97rem; }
+      ul { padding-left: 1.4rem; }
+      li { margin-bottom: 0.35rem; }
+      .placeholder {
+        background: #fef3c7;
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.88em;
+        color: #92400e;
+      }
+      a { color: var(--accent); }
+      .breadcrumbs {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        color: var(--muted);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.75rem;
+      }
+      .breadcrumbs a { color: var(--accent); }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.82rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      footer a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="./">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Privacy Policy</span>
+      </nav>
+
+      <div class="draft-banner" role="note" aria-label="Draft notice">⚠ Draft — Not Legally Reviewed</div>
+
+      <div class="kicker">Legal</div>
+      <h1>Privacy Policy</h1>
+      <p class="meta">
+        Sign Language Translator · Owner: Sashwath Subramanian ·
+        Last updated: <time datetime="2026-09-14">14 September 2026</time>
+      </p>
+
+      <p>
+        This privacy policy explains what information is collected when you use the Sign Language Translator
+        browser demo at
+        <a href="./">sashwathsubra.github.io/sign-language-translator-with-custom-hand-sign-recognition/</a>
+        ("the Site"), and how it is handled. The Site is an open-source, non-commercial accessibility
+        demonstration.
+      </p>
+
+      <h2>1. Who controls this Site</h2>
+      <p>
+        The Site is operated by <strong>Sashwath Subramanian</strong> (GitHub: sashwathsubra).<br />
+        Contact: <span class="placeholder">[YOUR CONTACT EMAIL — fill before publishing]</span><br />
+        Address: <span class="placeholder">[YOUR ADDRESS — required for GDPR Article 13 — fill before publishing]</span>
+      </p>
+
+      <h2>2. What data the Site collects</h2>
+
+      <h3 style="font-size:1rem;margin:1rem 0 0.35rem">2a. Webcam video</h3>
+      <p>
+        When you click "Start Stream", your browser requests access to your webcam. <strong>Webcam video
+        never leaves your browser.</strong> Hand-landmark detection runs entirely in-browser using
+        WebAssembly (MediaPipe Tasks Vision). No video frames, images, or landmarks are transmitted to
+        any server operated by this Site.
+      </p>
+
+      <h3 style="font-size:1rem;margin:1rem 0 0.35rem">2b. Gesture templates (localStorage)</h3>
+      <p>
+        When you record a gesture, the resulting feature data is stored in your browser's
+        <code>localStorage</code> under the key <code>slt_gestures</code>. This data never leaves your
+        device and is not accessible to the Site operator. You can delete it at any time through your
+        browser's developer tools or by clearing site data.
+      </p>
+
+      <h3 style="font-size:1rem;margin:1rem 0 0.35rem">2c. Third-party CDN connections</h3>
+      <p>
+        Loading the Site causes your browser to make connections to the following third-party services.
+        These services may log your IP address and other standard HTTP request headers in accordance with
+        their own privacy policies:
+      </p>
+      <ul>
+        <li>
+          <strong>Google Fonts</strong> (<code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>) —
+          used to load the DM Sans and IBM Plex Mono typefaces.
+          <a href="https://policies.google.com/privacy" rel="noopener noreferrer" target="_blank">Google Privacy Policy</a>.
+        </li>
+        <li>
+          <strong>jsDelivr</strong> (<code>cdn.jsdelivr.net</code>) — used to load the MediaPipe Tasks
+          Vision JavaScript bundle.
+          <a href="https://www.jsdelivr.com/privacy-policy-jsdelivr-net" rel="noopener noreferrer" target="_blank">jsDelivr Privacy Policy</a>.
+        </li>
+        <li>
+          <strong>Google Cloud Storage</strong> (<code>storage.googleapis.com</code>) — used to download
+          the hand-landmarker machine-learning model file.
+          <a href="https://policies.google.com/privacy" rel="noopener noreferrer" target="_blank">Google Privacy Policy</a>.
+        </li>
+      </ul>
+      <p>
+        The Site operator does not receive or store any data from these connections. These connections are
+        technically necessary for the Site to function.
+      </p>
+
+      <h3 style="font-size:1rem;margin:1rem 0 0.35rem">2d. Optional backend WebSocket</h3>
+      <p>
+        The Site may establish a WebSocket connection to a companion server hosted on
+        <strong>Render.com</strong> (<code>sign-language-translator-with-custom.onrender.com</code>) for
+        optional server-side processing. If this connection is made, your IP address is visible to the
+        Render.com server. No personal data is intentionally collected or logged by the server beyond
+        what is standard in HTTP server logs. Render.com's privacy policy applies:
+        <a href="https://render.com/privacy" rel="noopener noreferrer" target="_blank">render.com/privacy</a>.
+      </p>
+
+      <h2>3. Cookies</h2>
+      <p>
+        This Site does not set any first-party cookies. Third-party CDN providers listed above may set
+        cookies in accordance with their own policies. See the
+        <a href="./cookie-policy.html">Cookie Policy</a> for details.
+      </p>
+
+      <h2>4. Analytics and tracking</h2>
+      <p>
+        This Site does not use any analytics, tracking pixels, fingerprinting scripts, or advertising
+        networks. No behavioural data is collected.
+      </p>
+
+      <h2>5. Legal basis for processing (GDPR — EU/UK users)</h2>
+      <p>
+        For users in the European Economic Area (EEA) and United Kingdom, the legal basis for the
+        third-party CDN connections described in Section 2c is <strong>legitimate interest</strong>
+        (Article 6(1)(f) GDPR) — specifically, the technically necessary delivery of the application
+        assets. No personal data is processed for any other purpose. No consent banner is required
+        because no non-essential cookies are set and no personal data is collected by the Site operator.
+      </p>
+
+      <h2>6. CCPA/CPRA — California residents</h2>
+      <p>
+        The Site does not sell, share, or disclose personal information for cross-context behavioural
+        advertising. No personal information is collected by the Site operator. California residents have
+        no opt-out action available because there is nothing to opt out of.
+      </p>
+
+      <h2>7. DPDP Act 2023 — Indian residents</h2>
+      <p>
+        Under the Digital Personal Data Protection Act 2023 (India), the Site operator is a Data
+        Fiduciary only to the limited extent of the CDN connections described in Section 2c. No
+        personal data is processed, stored, or transferred by the Site operator. The third-party CDNs
+        listed above act as independent Data Fiduciaries under their own privacy policies.
+      </p>
+
+      <h2>8. Data retention</h2>
+      <p>
+        The Site operator retains no personal data. localStorage data (gesture templates) is retained on
+        your device indefinitely until you clear it. Server logs on Render.com are retained according to
+        Render.com's own data retention policy.
+      </p>
+
+      <h2>9. Your rights</h2>
+      <p>Depending on your jurisdiction, you may have the right to:</p>
+      <ul>
+        <li>Access, correct, or delete personal data held about you</li>
+        <li>Object to processing or request restriction</li>
+        <li>Lodge a complaint with a data protection authority</li>
+      </ul>
+      <p>
+        Since the Site operator holds no personal data, requests can generally be fulfilled immediately by
+        stating that nothing is held. To exercise your rights, contact:
+        <span class="placeholder">[YOUR CONTACT EMAIL]</span>.
+      </p>
+
+      <h2>10. Changes to this policy</h2>
+      <p>
+        This policy may be updated to reflect changes in the Site's functionality or applicable law.
+        Material changes will be noted with a revised "Last updated" date above.
+      </p>
+
+      <footer>
+        <span>© 2026 Sashwath Subramanian. Open-source demo.</span>
+        <span>
+          <a href="./">Home</a> ·
+          <a href="./terms.html">Terms</a> ·
+          <a href="./cookie-policy.html">Cookies</a>
+        </span>
+      </footer>
+    </main>
+  </body>
+</html>

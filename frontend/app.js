@@ -18,6 +18,8 @@ const recordButton = document.getElementById('recordGesture');
 const starterButton = document.getElementById('starterVocabulary');
 const trainedList = document.getElementById('trainedList');
 const refreshTemplatesButton = document.getElementById('refreshTemplates');
+const firstRunBanner = document.getElementById('firstRunBanner');
+const startFirstRunButton = document.getElementById('startFirstRun');
 
 let mediaStream = null;
 let animationFrameId = null;
@@ -37,6 +39,9 @@ let canvasWidth = 0;
 let canvasHeight = 0;
 let rVFCHandle = null;
 let lastHandResult = null;
+let lastLandmarkSendAt = 0;
+let sendCounter = 0;
+let sendWindowStart = performance.now();
 
 const MEDIA_PIPE_VERSION = '0.10.14';
 const MEDIA_PIPE_CDN_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIA_PIPE_VERSION}`;
@@ -57,6 +62,7 @@ const CAMERA_CONSTRAINTS_FALLBACK = {
   audio: false,
 };
 const ENABLE_MATCH_DEBUG_LOG = false;
+const FIRST_RUN_KEY = 'slt_first_run_done';
 const HAND_CONNECTIONS = [
   [0, 1], [1, 2], [2, 3], [3, 4],
   [0, 5], [5, 6], [6, 7], [7, 8],
@@ -139,6 +145,7 @@ function renderTemplateList(gestures) {
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.textContent = 'Delete';
+    remove.setAttribute('aria-label', `Delete gesture: ${gesture.label}`);
     remove.addEventListener('click', () => {
       matcher.deleteTemplate(gesture.label);
       fetchTemplates();
@@ -158,6 +165,7 @@ async function fetchTemplates() {
       needs_rerecord: false
     }));
     renderTemplateList(gestures);
+    maybeShowFirstRunBanner(gestures);
     maybeShowStarterGuide(gestures);
   } catch (error) {
     console.error(error);
@@ -193,8 +201,10 @@ function drawLandmarks(handSet, handednesses) {
         const p2 = hands[1][j];
         const dx = p1.x - p2.x;
         const dy = p1.y - p2.y;
-        const dz = p1.z - p2.z;
-        if (dx * dx + dy * dy + dz * dz < 0.0025) {
+        // XY-primary proximity: Z from a monocular camera is noisy and caused
+        // false negatives when hands touched at non-frontal angles.
+        // 0.0016 = (0.04)² in normalised coords ≈ 25 px at 640 px wide.
+        if (dx * dx + dy * dy < 0.0016) {
           touchingPoints[i] = 1;
           touchingPoints[21 + j] = 1;
         }
@@ -652,6 +662,46 @@ function maybeShowStarterGuide(gestures) {
   updateStatus('Starter setup', `No trained gestures yet. Record a few starter signs: ${starterLabels.slice(0, 6).join(', ')}.`);
 }
 
+function maybeShowFirstRunBanner(gestures) {
+  if (!firstRunBanner) return;
+  // Hide if the user already completed setup, or already has gestures saved.
+  const alreadyDone = (() => { try { return localStorage.getItem(FIRST_RUN_KEY); } catch { return null; } })();
+  if (alreadyDone || (gestures && gestures.length > 0)) {
+    firstRunBanner.hidden = true;
+    return;
+  }
+  firstRunBanner.hidden = false;
+}
+
+async function runFirstRunFlow() {
+  const firstRunLabels = ['open_hand', 'fist', 'thumbs_up'];
+  if (firstRunBanner) firstRunBanner.hidden = true;
+
+  if (!isRunning) {
+    updateStatus('Starting…', 'Starting camera for first-run setup.');
+    await startCamera();
+    // Give model time to initialise before recording begins.
+    await new Promise((resolve) => window.setTimeout(resolve, 1500));
+  }
+
+  for (let i = 0; i < firstRunLabels.length; i += 1) {
+    const label = firstRunLabels[i];
+    gestureLabel.value = label;
+    updateStatus('First-run setup', `Step ${i + 1}/${firstRunLabels.length}: Hold "${label}" steady for 2–3 seconds.`);
+    await new Promise((resolve) => window.setTimeout(resolve, 500));
+    await recordGesture(label);
+    // Wait for the 2.5 s recording window + a small buffer between steps.
+    await new Promise((resolve) => window.setTimeout(resolve, 2800));
+    if (isRecordingGesture) {
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
+    }
+  }
+
+  try { localStorage.setItem(FIRST_RUN_KEY, '1'); } catch { /* storage unavailable — non-fatal */ }
+  fetchTemplates();
+  updateStatus('Setup complete', 'Starter gestures saved. Add more any time using Teach a Sign.');
+}
+
 function bindEvents() {
   if (startDemo) startDemo.addEventListener('click', startCamera);
   if (startHero) startHero.addEventListener('click', startCamera);
@@ -660,6 +710,7 @@ function bindEvents() {
   if (recordButton) recordButton.addEventListener('click', () => recordGesture());
   if (starterButton) starterButton.addEventListener('click', runStarterVocabularyFlow);
   if (refreshTemplatesButton) refreshTemplatesButton.addEventListener('click', fetchTemplates);
+  if (startFirstRunButton) startFirstRunButton.addEventListener('click', runFirstRunFlow);
   window.addEventListener('beforeunload', stopCamera);
 }
 
