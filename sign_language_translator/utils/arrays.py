@@ -1,4 +1,6 @@
-from typing import Dict, List, Optional, Sequence, Tuple, Type, Union, overload
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -69,7 +71,7 @@ class ArrayOps:
     def cast(
         x: Union[NDArray, Tensor, Sequence[Union[float, int]]],
         data_type: Type[Union[np.ndarray, Tensor]],
-        _dtype: Optional[Union[Type[torch.dtype], Type[np.dtype], Type]] = None,
+        _dtype: Optional[Union[Type[Any], Type[np.dtype], Type]] = None,
     ) -> Union[NDArray, Tensor]:
         """Typecast some multidimensional data to numpy array or torch Tensor.
 
