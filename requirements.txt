@@ -1,14 +1,9 @@
-opencv_contrib_python==4.8.0.74
-tqdm==4.65.0
-matplotlib==3.7.2
-numpy==1.25.1
-torch==2.1.2
-click==8.1.6
-requests==2.31.0
+# Core server dependencies only (lightweight for Render free tier)
+numpy>=1.26
+tqdm>=4.65.0
+click>=8.1.6
+requests>=2.31.0
 fastapi==0.115.6
-uvicorn==0.34.0
-websockets==14.2
-
-# optional
-mediapipe==0.10.11
-deep_translator==1.11.4
+uvicorn[standard]==0.34.0
+websockets>=12.0
+python-multipart>=0.0.9
