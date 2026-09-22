@@ -31,7 +31,7 @@ from sign_language_translator import __version__
 # TODO: Dockerize the CLI.. but model persistance issue
 
 
-@click.group()
+@click.group(no_args_is_help=True)
 @click.version_option(__version__)
 def slt():
     """

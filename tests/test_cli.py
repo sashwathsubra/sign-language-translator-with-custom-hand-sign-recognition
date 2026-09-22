@@ -90,6 +90,7 @@ def test_slt_embed_text():
 
     runner = CliRunner()
 
+    os.makedirs("temp", exist_ok=True)
     with open(token_path := os.path.join("temp", "tokens.txt"), "w") as f:
         f.write("sign hello\nworld hello")
 
@@ -111,7 +112,7 @@ def test_slt_embed_text():
         ],
     )
     assert result.exit_code == 0
-    output = "temp" + os.sep + result.output.splitlines()[-1].split("temp" + os.sep)[-1]
+    output = result.output.split(" at ")[-1].strip()
     assert os.path.exists(output)
 
     checkpoint = torch.load(output)
@@ -124,7 +125,7 @@ def test_slt_complete():
 
     result = runner.invoke(slt, ["complete", "[m", "--model-code", "bigram-names"])
     assert result.exit_code == 0
-    assert result.output.split()[-1].startswith("[m")  # ignore progress bar
+    assert "[ma]" in result.output  # ignore progress bar
 
 
 @pytest.mark.skipif(not is_internet_available(), reason="No internet available")
