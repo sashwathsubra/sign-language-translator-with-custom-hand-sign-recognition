@@ -127,11 +127,12 @@ def test_slt_complete():
 
     result = runner.invoke(slt, ["complete", "[m", "--model-code", "bigram-names"])
     assert result.exit_code == 0
-    # tqdm uses \r to overwrite lines, so split on both \r and \n to isolate
-    # the actual completion output from the progress bar noise
-    parts = [p.strip() for p in re.split(r"[\r\n]", result.output) if p.strip()]
-    assert any(p.startswith("[m") for p in parts), (
-        f"No part starting with '[m' found in output parts: {parts}"
+    # The completion token (e.g. "[musal]") gets appended directly to the end of
+    # the tqdm progress bar string with no newline or space separator.
+    # tqdm timestamps look like [00:00<00:00], never [m...], so searching for
+    # \[m in the raw output reliably finds the completion result.
+    assert re.search(r"\[m", result.output), (
+        f"Completion starting with '[m' not found in output: {result.output!r}"
     )
 
 
