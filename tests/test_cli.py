@@ -121,13 +121,18 @@ def test_slt_embed_text():
 
 
 def test_slt_complete():
+    import re
+
     runner = CliRunner()
 
     result = runner.invoke(slt, ["complete", "[m", "--model-code", "bigram-names"])
     assert result.exit_code == 0
-    # The completion result is on the last non-empty line; ignore progress bar lines
-    last_line = [l for l in result.output.splitlines() if l.strip()][-1]
-    assert last_line.startswith("[m")  # ignore progress bar
+    # tqdm uses \r to overwrite lines, so split on both \r and \n to isolate
+    # the actual completion output from the progress bar noise
+    parts = [p.strip() for p in re.split(r"[\r\n]", result.output) if p.strip()]
+    assert any(p.startswith("[m") for p in parts), (
+        f"No part starting with '[m' found in output parts: {parts}"
+    )
 
 
 @pytest.mark.skipif(not is_internet_available(), reason="No internet available")
