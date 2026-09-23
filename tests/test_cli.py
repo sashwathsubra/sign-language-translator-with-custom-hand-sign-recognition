@@ -17,7 +17,7 @@ def test_slt():
     # should show help message
 
     assert result.exit_code == 0
-    assert "Usage: slt [OPTIONS] COMMAND [ARGS]" in result.output
+    assert "Usage: slt [OPTIONS] [COMMAND] [ARGS]" in result.output
 
 
 def test_slt_translate():
