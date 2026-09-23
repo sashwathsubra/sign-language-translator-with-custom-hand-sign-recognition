@@ -167,6 +167,8 @@ class SynonymFinder:
 
         # translation into intermediate languages
         translations = []
+        if isinstance(cache, dict):
+            cache.setdefault(text, {})  # always mark that we attempted this word
         threaded_map(
             translation_function,
             [(text, lang, translations) for lang in intermediate_languages],

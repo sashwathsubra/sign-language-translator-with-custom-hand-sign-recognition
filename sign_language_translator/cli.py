@@ -31,13 +31,16 @@ from sign_language_translator import __version__
 # TODO: Dockerize the CLI.. but model persistance issue
 
 
-@click.group(no_args_is_help=True)
+@click.group(invoke_without_command=True)
 @click.version_option(__version__)
-def slt():
+@click.pass_context
+def slt(ctx):
     """
     Sign Language Translator (SLT) command line interface.
     Documentation: https://sign-language-translator.readthedocs.io
     """
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
 
 @slt.group(no_args_is_help=True)

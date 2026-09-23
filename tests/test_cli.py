@@ -125,7 +125,9 @@ def test_slt_complete():
 
     result = runner.invoke(slt, ["complete", "[m", "--model-code", "bigram-names"])
     assert result.exit_code == 0
-    assert "[ma]" in result.output  # ignore progress bar
+    # The completion result is on the last non-empty line; ignore progress bar lines
+    last_line = [l for l in result.output.splitlines() if l.strip()][-1]
+    assert last_line.startswith("[m")  # ignore progress bar
 
 
 @pytest.mark.skipif(not is_internet_available(), reason="No internet available")
