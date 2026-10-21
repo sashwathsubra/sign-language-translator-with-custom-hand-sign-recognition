@@ -51,6 +51,15 @@ A lightweight browser demo for sign-to-sentence captioning, built on top of the 
 >
 > Attribution: this project builds on the original Sign Language Translator project by Mudassar Iqbal and contributors. See [ATTRIBUTION.md](ATTRIBUTION.md) for the project provenance and third-party license notice.
 
+### Upstream Library vs. Custom Demo
+
+- **Original Upstream Library**: The core sign-language translation framework developed by Mudassar Iqbal and contributors ([sign-language-translator](https://github.com/sign-language-translator/sign-language-translator)), providing rule-based text-to-sign synthesis (`ConcatenativeSynthesis`), n-gram and mixer language models (`slt.models`), tokenizers, and dataset integration. Released under the Apache-2.0 License.
+- **Custom Demo Additions**:
+  - A template-matching demo pipeline for user-calibrated gesture recognition in [sign_language_translator/demo/pipeline.py](sign_language_translator/demo/pipeline.py).
+  - A lightweight MediaPipe-powered browser frontend in [frontend/index.html](frontend/index.html) and [frontend/app.js](frontend/app.js).
+  - A WebSocket-backed streaming demo server in [server.py](server.py).
+  - Robust regression and hardening test suites in [tests/test_demo/test_pipeline.py](tests/test_demo/test_pipeline.py) and [tests/test_demo/test_server_hardening.py](tests/test_demo/test_server_hardening.py).
+
 ### My contribution
 
 - Added a template-matching demo pipeline for user-trained gesture recognition in [sign_language_translator/demo/pipeline.py](sign_language_translator/demo/pipeline.py)
@@ -58,20 +67,90 @@ A lightweight browser demo for sign-to-sentence captioning, built on top of the 
 - Added a WebSocket-backed demo server in [server.py](server.py)
 - Added regression tests for the demo pipeline in [tests/test_demo/test_pipeline.py](tests/test_demo/test_pipeline.py)
 
+### Classifier Nature & Limitations
+
+> [!IMPORTANT]
+> **Prototype Classifier Disclaimer**: The classifier in this demo is a lightweight **heuristic template-matching prototype**, not a generally validated or production-grade sign-language translation model. It computes palm-normalized landmark vectors, joint angles, and finger-curl ratios against a locally recorded vocabulary of static hand poses.
+>
+> - It does **not** recognize continuous dynamic sign language syntax, non-manual markers, facial expressions, or complex multi-sign sentence semantics.
+> - No claims are made regarding real-world accuracy or reliable sign-language translation without an appropriate dataset, diverse signers, and systematic empirical evaluation.
+
 ### Architecture
 
 ```text
-Browser / webcam
-  -> hand landmarks
-  -> WebSocket -> demo classifier -> language model -> sentence caption
+Browser / Webcam
+  -> MediaPipe Hand Landmarker (browser)
+  -> 21 3D Landmark Points
+  -> WebSocket / HTTP API (server.py)
+  -> Demo Pipeline (canonicalization, finger curls, template distance)
+  -> N-gram Mixer Language Model (sign_language_translator)
+  -> Streaming Caption History
 ```
 
-### Verification
+### End-to-End Setup & Run Guide
 
-Run the demo-pipeline tests locally:
+#### 1. Backend Setup & Dependencies
+
+Ensure Python 3.9+ is installed. Install the backend dependencies:
 
 ```bash
-python -m pytest tests/test_demo/test_pipeline.py -q
+pip install -r requirements.txt
+```
+
+*(Optional: for running tests with pytest, ensure `pytest` and `httpx` are installed as specified in `requirements.txt`.)*
+
+#### 2. Start the Backend Server
+
+Launch the WebSocket server:
+
+```bash
+python server.py
+```
+
+The server binds to `http://0.0.0.0:8000` by default, serving:
+- Health check: `GET http://localhost:8000/health`
+- Gesture template API: `GET /api/gestures`, `POST /api/gestures/record`, `DELETE /api/gestures/{label}`
+- Real-time WebSocket: `ws://localhost:8000/ws`
+
+#### 3. Run the Frontend
+
+In a separate terminal, serve the `frontend/` directory with any static file server:
+
+```bash
+python -m http.server 8080 --directory frontend
+```
+
+Open `http://localhost:8080` in a modern browser (Chrome, Edge, Firefox, or Safari).
+
+#### 4. Webcam Permissions & Troubleshooting
+
+- When clicking **Start Demo**, the browser will request camera permissions.
+- **Permission requirement**: Browsers require a secure context (`https://` or `http://localhost`) to grant `getUserMedia` access.
+- If the camera shows as unavailable or blocked:
+  - Check that no other application or browser tab is locking the webcam.
+  - Review browser site settings to ensure camera access is allowed for `http://localhost:8080`.
+
+#### 5. Recording Custom Gesture Templates
+
+1. Open the demo at `http://localhost:8080`.
+2. Under **Teach a Sign**, enter a label (e.g. `open_hand`, `fist`, `peace`) in the text box.
+3. Position your hand clearly within the camera frame and click **Record**.
+4. The system collects landmark samples, builds a normalized feature vector, and stores the template locally.
+5. When holding that pose steadily in frame, the system matches the template and appends the token to the live caption history.
+
+### Verification & Testing
+
+Run the complete demo test suite locally:
+
+```bash
+python -m pytest tests/test_demo -v
+```
+
+To run individual test files:
+
+```bash
+python -m pytest tests/test_demo/test_pipeline.py -v
+python -m pytest tests/test_demo/test_server_hardening.py -v
 ```
 
 Sign language consists of gestures and expressions used mainly by the hearing-impaired to talk. This project is an effort to bridge the communication gap between the hearing and the hearing-impaired community using Artificial Intelligence.

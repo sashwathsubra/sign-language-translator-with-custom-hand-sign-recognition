@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Deque, Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from sign_language_translator.demo.pipeline import DemoPipeline
@@ -99,6 +99,9 @@ class DemoSession:
             self.hand_detected = True
 
         landmarks = payload.get("landmarks")
+        if "landmarks" in payload and not isinstance(landmarks, list):
+            return {"ok": False, "reason": "invalid_payload"}
+
         if not isinstance(landmarks, list) or not landmarks:
             if self.hand_detected:
                 return {"ok": False, "reason": "invalid_payload"}
@@ -126,7 +129,7 @@ class DemoSession:
                         return {"ok": False, "reason": "invalid_payload"}
                     hand_points.append(values)
                 hand_sets.append(hand_points)
-            normalized_landmarks = hand_sets
+            normalized_landmarks = [point for hand in hand_sets for point in hand]
         else:
             normalized_landmarks = []
             for item in landmarks:
@@ -244,15 +247,24 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             if session.should_close():
                 logger.info("session_idle_close session=%s", session.session_id)
                 break
-            payload_text = await websocket.receive_text()
+            try:
+                payload_text = await websocket.receive_text()
+            except WebSocketDisconnect:
+                break
             session.last_activity_at = time.monotonic()
             try:
                 data = json.loads(payload_text)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, TypeError):
                 await websocket.send_json({"type": "status", "message": "The server received an invalid message."})
                 continue
 
-            result = session.handle_payload(data)
+            try:
+                result = session.handle_payload(data)
+            except Exception as proc_exc:
+                logger.exception("session_payload_error session=%s error=%s", session.session_id, proc_exc)
+                await websocket.send_json({"type": "error", "message": "An error occurred while processing the frame."})
+                continue
+
             if not result["ok"]:
                 if result["reason"] == "buffer_full":
                     await websocket.send_json({"type": "status", "message": "The session is receiving data faster than it can be processed."})
@@ -280,6 +292,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     "confusable_pair": result.get("confusable_pair", False),
                 }
             )
+    except WebSocketDisconnect:
+        logger.info("websocket_disconnect session=%s", session.session_id)
     except Exception as exc:  # pragma: no cover - defensive isolation
         logger.exception("websocket_error session=%s error=%s", session.session_id, exc)
         try:

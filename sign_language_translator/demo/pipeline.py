@@ -60,9 +60,18 @@ def _coerce_21x3_landmarks(hand_landmarks: Sequence[Sequence[float]]) -> np.ndar
     if not hand_landmarks:
         return np.zeros((21, 3), dtype=float)
 
-    landmarks = np.asarray(hand_landmarks, dtype=float)
+    try:
+        landmarks = np.asarray(hand_landmarks, dtype=float)
+    except (ValueError, TypeError):
+        return np.zeros((21, 3), dtype=float)
+
+    if not np.all(np.isfinite(landmarks)):
+        return np.zeros((21, 3), dtype=float)
+
     if landmarks.ndim == 1:
         landmarks = landmarks.reshape(1, -1)
+    elif landmarks.ndim == 3:
+        landmarks = landmarks.reshape(-1, landmarks.shape[-1])
 
     if landmarks.size == 0:
         return np.zeros((21, 3), dtype=float)
@@ -112,7 +121,10 @@ def normalize_landmarks(hand_landmarks: Sequence[Sequence[float]]) -> np.ndarray
     scale = float(np.linalg.norm(centered, axis=1).max())
     if not np.isfinite(scale) or scale < 1e-8:
         scale = 1.0
-    return (centered / scale).astype(float)
+    normalized = (centered / scale).astype(float)
+    if not np.all(np.isfinite(normalized)):
+        return np.zeros_like(normalized)
+    return normalized
 
 
 def _joint_angle(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> float:
@@ -163,6 +175,8 @@ def _build_legacy_landmark_vector(hand_landmarks: Sequence[Sequence[float]]) -> 
     landmarks = np.asarray(hand_landmarks, dtype=float)
     if landmarks.ndim == 1:
         landmarks = landmarks.reshape(1, -1)
+    elif landmarks.ndim == 3:
+        landmarks = landmarks.reshape(-1, landmarks.shape[-1])
     if landmarks.shape[0] <= 3:
         if landmarks.shape[0] == 0:
             return np.zeros(9, dtype=float)
@@ -198,14 +212,23 @@ def build_landmark_vector(
     if not hand_landmarks:
         return np.zeros(0, dtype=float)
 
-    landmarks = np.asarray(hand_landmarks, dtype=float)
+    try:
+        landmarks = np.asarray(hand_landmarks, dtype=float)
+    except (ValueError, TypeError):
+        return np.zeros(0, dtype=float)
+
+    if not np.all(np.isfinite(landmarks)):
+        return np.zeros(0, dtype=float)
+
     if landmarks.ndim == 1:
         landmarks = landmarks.reshape(1, -1)
+    elif landmarks.ndim == 3:
+        landmarks = landmarks.reshape(-1, landmarks.shape[-1])
     if landmarks.shape[0] <= 3:
         return _build_legacy_landmark_vector(hand_landmarks)
 
     normalized = normalize_landmarks(hand_landmarks)
-    if float(np.linalg.norm(normalized, axis=1).max()) < 1e-6:
+    if not np.all(np.isfinite(normalized)) or float(np.linalg.norm(normalized, axis=1).max()) < 1e-6:
         return np.zeros(82, dtype=float)
 
     position_features = normalized.reshape(-1).astype(float)
@@ -252,7 +275,7 @@ class GestureClassifier:
         try:
             with path.open("r", encoding="utf-8") as fh:
                 payload = json.load(fh)
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
             return
         if not isinstance(payload, dict):
             return
@@ -260,17 +283,27 @@ class GestureClassifier:
         if "templates" in payload and isinstance(payload["templates"], dict):
             for label, item in payload["templates"].items():
                 if isinstance(item, dict) and isinstance(item.get("vector"), list):
-                    self.templates[str(label)] = np.asarray(item["vector"], dtype=float)
-                    self.template_feature_versions[str(label)] = int(
-                        item.get("feature_version", FEATURE_VERSION_ENHANCED)
-                    )
+                    try:
+                        arr = np.asarray(item["vector"], dtype=float)
+                        if arr.size > 0 and np.all(np.isfinite(arr)):
+                            self.templates[str(label)] = arr
+                            self.template_feature_versions[str(label)] = int(
+                                item.get("feature_version", FEATURE_VERSION_ENHANCED)
+                            )
+                    except (ValueError, TypeError):
+                        continue
             return
 
         # Backward compatibility with v1 store: {label: [vector]}.
         for label, vector in payload.items():
             if isinstance(vector, list):
-                self.templates[str(label)] = np.asarray(vector, dtype=float)
-                self.template_feature_versions[str(label)] = FEATURE_VERSION_LEGACY
+                try:
+                    arr = np.asarray(vector, dtype=float)
+                    if arr.size > 0 and np.all(np.isfinite(arr)):
+                        self.templates[str(label)] = arr
+                        self.template_feature_versions[str(label)] = FEATURE_VERSION_LEGACY
+                except (ValueError, TypeError):
+                    continue
 
     def _persist(self) -> None:
         payload = {
@@ -385,7 +418,11 @@ class GestureClassifier:
             legacy_vector = np.asarray(
                 build_landmark_vector(window, feature_version=FEATURE_VERSION_LEGACY), dtype=float
             ).reshape(-1)
-            if enhanced_vector.size == 0 or np.allclose(enhanced_vector, 0.0):
+            if (
+                enhanced_vector.size == 0
+                or not np.all(np.isfinite(enhanced_vector))
+                or np.allclose(enhanced_vector, 0.0)
+            ):
                 return {
                     "token": "unknown",
                     "confidence": 0.0,
@@ -538,6 +575,7 @@ class DemoPipeline:
 __all__ = [
     "DemoPipeline",
     "GestureClassifier",
+    "append_caption_word",
     "build_landmark_vector",
     "normalize_landmarks",
 ]
